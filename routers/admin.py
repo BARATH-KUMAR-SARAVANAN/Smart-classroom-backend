@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import get_db
 import models
-from typing import Optional
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -14,6 +14,15 @@ class AssignRoleRequest(BaseModel):
     section: Optional[str] = None
     department: Optional[str] = None
     subject: Optional[str] = None
+    
+class ClassOut(BaseModel):
+    id: int
+    grade: str
+    section: str
+
+    class Config:
+        orm_mode = True
+   
 
 
 @router.get("/unassigned-users")
@@ -42,8 +51,7 @@ async def assign_role(request: Request, db: Session = Depends(get_db)):
 
     user_id = data.get("user_id")
     role = data.get("role")
-    grade = data.get("grade")
-    section = data.get("section")
+    class_id = data.get("class_id")  # new field replacing grade & section
     department = data.get("department")
     subject = data.get("subject")
 
@@ -52,13 +60,17 @@ async def assign_role(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
 
     if role == "student":
-        if grade is None or section is None:
-            raise HTTPException(status_code=400, detail="Grade and section are required for students")
+        if class_id is None:
+            raise HTTPException(status_code=400, detail="Class ID is required for students")
+
+        # Validate that the class_id exists
+        class_obj = db.query(models.Class).filter(models.Class.id == class_id).first()
+        if not class_obj:
+            raise HTTPException(status_code=404, detail="Class not found")
 
         new_student = models.Student(
             user_id=user_id,
-            grade=grade,
-            section=section
+            class_id=class_id
         )
         db.add(new_student)
 
@@ -78,3 +90,8 @@ async def assign_role(request: Request, db: Session = Depends(get_db)):
 
     db.commit()
     return {"message": f"{role.capitalize()} assigned successfully"}
+
+@router.get("/classes")
+def get_all_classes(db: Session = Depends(get_db)):
+    classes = db.query(models.Class).all()
+    return [{"id": c.id, "grade": c.grade, "section": c.section} for c in classes]

@@ -73,32 +73,43 @@ def get_class_id(grade: str, section: str, db: Session = Depends(get_db)):
 
 
 
+
 @router.post("/send-assignment")
 async def send_assignment(request: Request, db: Session = Depends(get_db)):
     try:
         data = await request.json()
-        print("hi")
+
+        # Parse ISO 8601 datetime safely
+        try:
+            due_date = datetime.fromisoformat(data["due_date"])
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use ISO format.")
+
         new_assignment = models.Assignment(
             title=data["title"],
             subject=data["subject"],
             teacher_id=data["teacher_id"],
             class_id=data["class_id"],
-            due_date=datetime.strptime(data["due_date"], "%Y-%m-%dT%H:%M"),  # Adjust if format differs
+            due_date=due_date,
             assignment_type=data["assignment_type"],
             created_at=datetime.now()
         )
 
         db.add(new_assignment)
-        db.flush()
+        db.flush()  # get assignment ID
 
         for q in data["questions"]:
-            question = models.AssignmentQuestion(
-                assignment_id=new_assignment.id,
-                question_text=q["question_text"],
-                options=q["options"],  # Already JSON-stringified on frontend
-                correct_answer=q["correct_answer"],
-                marks=q["marks"]
-            )
+            question_kwargs = {
+                "assignment_id": new_assignment.id,
+                "question_text": q["question_text"],
+                "marks": q["marks"]
+            }
+            if "options" in q:
+                question_kwargs["options"] = q["options"]
+            if "correct_answer" in q:
+                question_kwargs["correct_answer"] = q["correct_answer"]
+
+            question = models.AssignmentQuestion(**question_kwargs)
             db.add(question)
 
         db.commit()

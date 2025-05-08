@@ -99,8 +99,7 @@ def get_student_meta(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Student metadata not found")
     return {
         "student_id": student.id,
-        "grade": student.grade,
-        "section": student.section,
+        "class_id": student.class_id
     }
 
 @router.get("/teacher/meta/{user_id}")

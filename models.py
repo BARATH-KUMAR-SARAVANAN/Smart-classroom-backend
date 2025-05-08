@@ -36,10 +36,10 @@ class Student(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    grade = Column(String(10))
-    section = Column(String(5))
+    class_id = Column(Integer, ForeignKey('classes.id'))
 
     user = relationship("User", back_populates="student")
+    class_ = relationship("Class")
 
 class Teacher(Base):
     __tablename__ = 'teachers'
@@ -82,6 +82,7 @@ class AssignmentType(enum.Enum):
     mcq = "mcq"
     description = "description"
     file = "file"
+    prob = "prob"
 
 class Assignment(Base):
     __tablename__ = 'assignments'
@@ -109,7 +110,7 @@ class AssignmentQuestion(Base):
     marks = Column(Integer, nullable=False)
 
     assignment = relationship("Assignment", back_populates="questions")
-
+    
 class StudentResponse(Base):
     __tablename__ = 'student_responses'
 
