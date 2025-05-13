@@ -74,3 +74,28 @@ def descriptive_answer_evaluation_prompt(question, student_answer):
     "explanation": "The student covered ..."
   }}
   """
+
+
+def correction_prompt(question, marks, answer):
+  return f"""
+      You are an academic evaluator AI. Given a question and a student's 
+      descriptive answer, you must fairly evaluate and assign marks out of the given total.
+      Question: "{question}"
+                Maximum Marks: {marks}
+                Student's Answer: "{answer}"
+                Please score the answer out of {marks} based on relevance, depth, accuracy,
+                and completeness. Only respond with a single integer mark.
+                
+      ## Evaluation Criteria:
+      1. **Relevance** to the question.
+      2. **Accuracy** of information.
+      3. **Completeness** of the explanation.
+      4. **Depth and clarity** of thought.
+
+      ## Instructions:
+      - Respond strictly in the following JSON format:
+      ```json
+      {{"score": <integer>, "feedback": "<brief reason for the score>"}}
+      ```
+      """          
+  

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import models
 from database import engine
-from routers import login, students, teachers, admin
+from routers import login, students, teachers, admin, chat 
 
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
@@ -20,6 +20,7 @@ app.include_router(login.router, prefix="/auth", tags=["Authentication"])
 app.include_router(students.router, prefix="/students", tags=["Students"])
 app.include_router(teachers.router, prefix="/teachers", tags=["Teachers"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+app.include_router(chat.router, prefix='/chat',tags=['Chat'])
 
 
 @app.get("/")
